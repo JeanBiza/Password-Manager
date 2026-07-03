@@ -48,12 +48,11 @@ def set_pin_window(win):
 def change_pin_window(win):
 
     def change_pin():
-        pin = f.get_pin()
 
         if not old_pin_entry.get() or not new_pin_entry.get() or not confirm_pin_entry.get():
             messagebox.showerror("Error", "All fields are required.")
             return
-        if old_pin_entry.get() != pin:
+        if not f.verify_pin(old_pin_entry.get()):
             messagebox.showerror("Error", "Incorrect Security pin")
             return
         if new_pin_entry.get() != confirm_pin_entry.get():
@@ -90,9 +89,8 @@ def change_pin_window(win):
 
 
 def pin_window(win):
-    pin = f.get_pin()
     def confirm_pin():
-        if pin == pin_entry.get():
+        if f.verify_pin(pin_entry.get()):
             view_window(win)
         else:
             messagebox.showerror("Error", "Incorrect security pin.")

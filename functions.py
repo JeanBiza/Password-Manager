@@ -1,10 +1,26 @@
-from cryptography.fernet import Fernet
 import os
 import sqlite3
 import json
+import hashlib
+from cryptography.fernet import Fernet
 
 CONFIG_FILE = "config.json"
 DB_NAME = "database.db"
+
+def hash_pin(pin: str) -> str:
+    return hashlib.sha256(pin.encode()).hexdigest()
+
+def set_pin(pin: str):
+    config = load_config()
+    config["pin"] = hash_pin(pin)
+    save_config(config)
+
+def verify_pin(pin: str) -> bool:
+    config = load_config()
+    stored = config.get("pin", None)
+    if stored is None:
+        return False
+    return hash_pin(pin) == stored
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
@@ -29,11 +45,6 @@ def toggle_first_run():
 def get_pin():
     config = load_config()
     return config.get("pin", None)
-
-def set_pin(pin):
-    config = load_config()
-    config["pin"] = pin
-    save_config(config)
 
 def create_master_key():
     master = Fernet.generate_key()
