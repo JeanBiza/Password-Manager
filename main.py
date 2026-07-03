@@ -1,8 +1,11 @@
-import functions as f
 import tkinter as tk
 from tkinter import messagebox
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
+
+import config as cf 
+import crypto as cr 
+import database as db
 
 def clear_window(win):
     for widget in win.winfo_children():
@@ -11,7 +14,7 @@ def clear_window(win):
 def set_pin_window(win):
     clear_window(win)
 
-    if not f.is_first_run():
+    if not cf.is_first_run():
         pin_window(win)
         return
 
@@ -23,10 +26,10 @@ def set_pin_window(win):
             messagebox.showerror("Error", "The new PIN and confirmation dont match.")
             return
 
-        f.set_pin(pin_entry.get())
+        cf.set_pin(pin_entry.get())
         messagebox.showinfo("Info", "Pin set successfully")
         pin_window(win)
-        f.toggle_first_run()
+        cf.toggle_first_run()
 
     set_pin_label = tk.Label(win, text="Set your security PIN.")
     set_pin_label.pack()
@@ -52,14 +55,14 @@ def change_pin_window(win):
         if not old_pin_entry.get() or not new_pin_entry.get() or not confirm_pin_entry.get():
             messagebox.showerror("Error", "All fields are required.")
             return
-        if not f.verify_pin(old_pin_entry.get()):
+        if not cf.verify_pin(old_pin_entry.get()):
             messagebox.showerror("Error", "Incorrect Security pin")
             return
         if new_pin_entry.get() != confirm_pin_entry.get():
             messagebox.showerror("Error", "The new PIN and confirmation dont match.")
             return
 
-        f.set_pin(new_pin_entry.get())
+        cf.set_pin(new_pin_entry.get())
         messagebox.showinfo("Info", "PIN changed successfully")
         pin_window(win)
 
@@ -90,7 +93,7 @@ def change_pin_window(win):
 
 def pin_window(win):
     def confirm_pin():
-        if f.verify_pin(pin_entry.get()):
+        if cf.verify_pin(pin_entry.get()):
             view_window(win)
         else:
             messagebox.showerror("Error", "Incorrect security pin.")
@@ -116,7 +119,7 @@ def pin_window(win):
 
 def view_window(win):
     clear_window(win)
-    passwords = f.get_passwords()
+    passwords = db.get_passwords()
     selected_index = [None]
 
     def copy_password():
@@ -143,7 +146,7 @@ def view_window(win):
 
         confirm = messagebox.askyesno("Confirm Deletion", f'Are you sure you want delete the password for "{website}"?')
         if confirm:
-            f.delete_password(pass_id)
+            db.delete_password(pass_id)
             view_window(win)
 
     def update_selected():
@@ -160,7 +163,7 @@ def view_window(win):
             messagebox.showerror("Error", "Website and Username are required")
             return
 
-        f.update_password(pass_id, new_website, new_user)
+        db.update_password(pass_id, new_website, new_user)
         messagebox.showinfo("Success", "Data updated successfully")
         view_window(win)
 
@@ -236,7 +239,7 @@ def add_window(win):
             tk.messagebox.showerror("Error", "Passwords dont match")
             return
 
-        f.save_password(website, user, password)
+        db.save_password(website, user, password)
 
         website_entry.delete(0, tk.END)
         user_entry.delete(0, tk.END)
@@ -304,8 +307,8 @@ def add_window(win):
     back_btn.pack()
 
 def main_window(win=None):
-    f.init_db()
-    f.toggle_first_run()
+    db.init_db()
+    cf.toggle_first_run()
 
     if win is None:
         win = ttk.Window(themename="darkly")
