@@ -1,0 +1,5 @@
+master.key
+config.json
+database.db
+__pycache__/
+venv/
