@@ -2,6 +2,7 @@ import customtkinter as ctk
 from tkinter import messagebox
 import config as cf
 import database as db
+import utils as ut
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -219,6 +220,18 @@ def add_window(win):
     pass_frame.pack(pady=2)
     password_entry = ctk.CTkEntry(pass_frame, show="*", width=240)
     password_entry.pack(side="left", padx=(0, 5))
+
+    def generate():
+        pwd = ut.generate_password()
+        password_entry.configure(state="normal", show="")
+        password_entry.delete(0, ctk.END)
+        password_entry.insert(0, pwd)
+        confirm_entry.delete(0, ctk.END)
+        confirm_entry.insert(0, pwd)
+        toggle_pass_btn.configure(text="Hide")
+
+    generate_btn = ctk.CTkButton(pass_frame, text="Generate", width=80, command=generate)
+    generate_btn.pack(side="left", padx=(0, 5))
     toggle_pass_btn = ctk.CTkButton(pass_frame, text="Show", width=60, command=lambda: toggle(password_entry, toggle_pass_btn))
     toggle_pass_btn.pack(side="left")
 
