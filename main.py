@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox
+import tkinter as tk
 import config as cf
 import database as db
 import utils as ut
@@ -148,11 +149,21 @@ def view_window(win):
 
     ctk.CTkLabel(win, text="Saved Passwords", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(15, 5))
 
-    import tkinter as tk
+    search_entry = ctk.CTkEntry(win, placeholder_text="Search by website...", width=300)
+    search_entry.pack(pady=(0, 5))
+
+    def filter_list(event=None):
+        query = search_entry.get().lower()
+        password_listbox.delete(0, tk.END)
+        for p in passwords:
+            if query in p[1].lower():
+                password_listbox.insert(tk.END, p[1])
+
+    search_entry.bind("<KeyRelease>", filter_list)
+
     password_listbox = tk.Listbox(win, bg="#2b2b2b", fg="white", selectbackground="#1f538d", width=40, height=8, relief="flat")
     password_listbox.pack(padx=20, pady=5)
-    for p in passwords:
-        password_listbox.insert(tk.END, p[1])
+    filter_list()
     password_listbox.bind("<<ListboxSelect>>", on_select)
 
     ctk.CTkLabel(win, text="Website").pack()
