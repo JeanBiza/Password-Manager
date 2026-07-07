@@ -75,10 +75,21 @@ def change_pin_window(win):
 
 def pin_window(win):
     def confirm_pin():
+        if cf.is_locked_out():
+            mins = cf.lockout_remaining()
+            messagebox.showerror("Locked", f"Too many failed attempts. Try again in {mins} minute(s).")
+            return
         if cf.verify_pin(pin_entry.get()):
+            cf.reset_failed_attempts()
             view_window(win)
         else:
-            messagebox.showerror("Error", "Incorrect security PIN.")
+            cf.increment_failed_attempts()
+            remaining = cf.MAX_ATTEMPTS - cf.get_failed_attempts()
+            if remaining <= 0:
+                mins = cf.lockout_remaining()
+                messagebox.showerror("Locked", f"Too many failed attempts. Try again in {mins} minute(s).")
+            else:
+                messagebox.showerror("Error", f"Incorrect security PIN. {remaining} attempt(s) remaining.")
             pin_entry.delete(0, ctk.END)
 
     clear_window(win)

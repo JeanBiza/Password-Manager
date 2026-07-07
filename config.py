@@ -1,8 +1,11 @@
 import hashlib
 import json
 import os
+import datetime
 
 CONFIG_FILE = "config.json"
+MAX_ATTEMPTS = 3
+LOCKOUT_MINUTES = 5
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
@@ -42,3 +45,39 @@ def verify_pin(pin: str) -> bool:
 def get_pin():
     config = load_config()
     return config.get("pin", None)
+
+
+def get_failed_attempts() -> int:
+    config = load_config()
+    return config.get("failed_attempts", 0)
+
+def increment_failed_attempts():
+    config = load_config()
+    config["failed_attempts"] = config.get("failed_attempts", 0) + 1
+    if config["failed_attempts"] >= MAX_ATTEMPTS:
+        config["lockout_until"] = (datetime.datetime.now() + datetime.timedelta(minutes=LOCKOUT_MINUTES)).isoformat()
+    save_config(config)
+
+def reset_failed_attempts():
+    config = load_config()
+    config["failed_attempts"] = 0
+    config.pop("lockout_until", None)
+    save_config(config)
+
+def is_locked_out() -> bool:
+    config = load_config()
+    lockout_until = config.get("lockout_until")
+    if not lockout_until:
+        return False
+    if datetime.datetime.now() < datetime.datetime.fromisoformat(lockout_until):
+        return True
+    reset_failed_attempts()
+    return False
+
+def lockout_remaining() -> int:
+    config = load_config()
+    lockout_until = config.get("lockout_until")
+    if not lockout_until:
+        return 0
+    delta = datetime.datetime.fromisoformat(lockout_until) - datetime.datetime.now()
+    return max(0, int(delta.total_seconds() / 60) + 1)
