@@ -2,10 +2,15 @@ import hashlib
 import json
 import os
 import datetime
+import time
+
 
 CONFIG_FILE = "config.json"
 MAX_ATTEMPTS = 3
 LOCKOUT_MINUTES = 5
+
+IDLE_TIMEOUT = 300
+last_activity = [time.time()]
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
@@ -81,3 +86,15 @@ def lockout_remaining() -> int:
         return 0
     delta = datetime.datetime.fromisoformat(lockout_until) - datetime.datetime.now()
     return max(0, int(delta.total_seconds() / 60) + 1)
+
+def reset_activity(event=None):
+    last_activity[0] = time.time()
+
+def check_idle(win, current_view):
+    if current_view[0] == "view":
+        if time.time() - last_activity[0] > IDLE_TIMEOUT:
+            messagebox.showwarning("Session expired", "Session expired due to inactivity.")
+            current_view[0] = "locked"
+            pin_window(win)
+            return
+    win.after(10000, lambda: check_idle(win, current_view))

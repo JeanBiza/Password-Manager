@@ -1,9 +1,26 @@
 import customtkinter as ctk
 from tkinter import messagebox
+import time
 import tkinter as tk
 import config as cf
 import database as db
 import utils as ut
+
+
+IDLE_TIMEOUT = 300
+last_activity = [time.time()]
+
+def reset_activity(event=None):
+    last_activity[0] = time.time()
+
+def check_idle(win, current_view):
+    if current_view[0] == "view":
+        if time.time() - last_activity[0] > IDLE_TIMEOUT:
+            messagebox.showwarning("Session expired", "Session expired due to inactivity.")
+            current_view[0] = "locked"
+            pin_window(win)
+            return
+    win.after(10000, lambda: check_idle(win, current_view))
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -72,7 +89,6 @@ def change_pin_window(win):
     ctk.CTkButton(win, text="Save", command=change_pin, width=200).pack(pady=5)
     ctk.CTkButton(win, text="Back", command=lambda: pin_window(win), width=200, fg_color="transparent", border_width=1).pack(pady=5)
 
-
 def pin_window(win):
     def confirm_pin():
         if cf.is_locked_out():
@@ -106,6 +122,14 @@ def view_window(win):
     win.geometry("500x650")
     passwords = db.get_passwords()
     selected_index = [None]
+
+    current_view = ["view"]
+    reset_activity()
+    
+    win.bind("<Motion>", reset_activity)
+    win.bind("<KeyPress>", reset_activity)
+
+    win.after(10000, lambda: check_idle(win, current_view))
 
     def copy_password():
         if not password_entry.get():
@@ -280,6 +304,8 @@ def main_window(win=None):
         win.title("Password Manager")
     else:
         win.geometry("500x500")
+        win.unbind("<Motion>")
+        win.unbind("<KeyPress>")
 
     clear_window(win)
     ctk.CTkLabel(win, text="Password Manager", font=ctk.CTkFont(size=20, weight="bold")).pack(pady=(40, 20))
